@@ -9,7 +9,10 @@ using WebAppDirectors.Modails;
 
 namespace WebAppDirectors.Controllers
 {
-    public class DirectorsController : Controller
+
+    [Route("api/[controller]")]
+    [ApiController]
+    public class DirectorsController : ControllerBase
     {
         private readonly Lab2LibaryContext _context;
 
@@ -19,129 +22,82 @@ namespace WebAppDirectors.Controllers
         }
 
         // GET: Directors
-        public async Task<IActionResult> Index()
+         [HttpGet]
+        public async Task<ActionResult<IEnumerable<Director>>> GetCarStores()
         {
-            return View(await _context.Directors.ToListAsync());
+            return await _context.Directors.ToListAsync();
         }
 
-        // GET: Directors/Details/5
-        public async Task<IActionResult> Details(int? id)
+        // GET: api/CarStores/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Director>> GetDirector(int id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var director = await _context.Directors
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (director == null)
-            {
-                return NotFound();
-            }
-
-            return View(director);
-        }
-
-        // GET: Directors/Create
-        public IActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: Directors/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,Info")] Director director)
-        {
-            if (ModelState.IsValid)
-            {
-                _context.Add(director);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(director);
-        }
-
-        // GET: Directors/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
             var director = await _context.Directors.FindAsync(id);
+
             if (director == null)
             {
                 return NotFound();
             }
-            return View(director);
+
+            return director;
         }
 
-        // POST: Directors/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Info")] Director director)
+        // PUT: api/CarStores/5
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutDirector(int id, Director director)
         {
             if (id != director.Id)
             {
-                return NotFound();
+                return BadRequest();
             }
 
-            if (ModelState.IsValid)
+            _context.Entry(director).State = EntityState.Modified;
+
+            try
             {
-                try
-                {
-                    _context.Update(director);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!DirectorExists(director.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                await _context.SaveChangesAsync();
             }
-            return View(director);
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!DirectorExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
         }
 
-        // GET: Directors/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        // POST: api/CarStores
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPost]
+        public async Task<ActionResult<Director>> PostDirector(Director director)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            _context.Directors.Add(director);
+            await _context.SaveChangesAsync();
 
-            var director = await _context.Directors
-                .FirstOrDefaultAsync(m => m.Id == id);
+            return CreatedAtAction("GetDirector", new { id = director.Id }, director);
+        }
+
+        // DELETE: api/CarStores/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteDirector(int id)
+        {
+            var director = await _context.Directors.FindAsync(id);
             if (director == null)
             {
                 return NotFound();
             }
 
-            return View(director);
-        }
-
-        // POST: Directors/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var director = await _context.Directors.FindAsync(id);
             _context.Directors.Remove(director);
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+
+            return NoContent();
         }
 
         private bool DirectorExists(int id)

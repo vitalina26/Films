@@ -9,6 +9,9 @@ using WebAppDirectors.Modails;
 
 namespace WebAppDirectors.Controllers
 {
+
+    [Route("api/[controller]")]
+    [ApiController]
     public class DirectorsFilmsController : Controller
     {
         private readonly Lab2LibaryContext _context;
@@ -19,142 +22,81 @@ namespace WebAppDirectors.Controllers
         }
 
         // GET: DirectorsFilms
-        public async Task<IActionResult> Index()
+        public async Task<ActionResult<IEnumerable<DirectorsFilms>>> GetDirectorsFilms()
         {
-            var lab2LibaryContext = _context.DirectorsFilms.Include(d => d.Director).Include(d => d.Film);
-            return View(await lab2LibaryContext.ToListAsync());
+            return await _context.DirectorsFilms.ToListAsync();
         }
 
-        // GET: DirectorsFilms/Details/5
-        public async Task<IActionResult> Details(int? id)
+        // GET: api/PublishedCars/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<DirectorsFilms>> GetDirectorsFilms(int id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var directorsFilms = await _context.DirectorsFilms
-                .Include(d => d.Director)
-                .Include(d => d.Film)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (directorsFilms == null)
-            {
-                return NotFound();
-            }
-
-            return View(directorsFilms);
-        }
-
-        // GET: DirectorsFilms/Create
-        public IActionResult Create()
-        {
-            ViewData["DirectorId"] = new SelectList(_context.Directors, "Id", "Id");
-            ViewData["FilmId"] = new SelectList(_context.Films, "Id", "Id");
-            return View();
-        }
-
-        // POST: DirectorsFilms/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,FilmId,DirectorId")] DirectorsFilms directorsFilms)
-        {
-            if (ModelState.IsValid)
-            {
-                _context.Add(directorsFilms);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["DirectorId"] = new SelectList(_context.Directors, "Id", "Id", directorsFilms.DirectorId);
-            ViewData["FilmId"] = new SelectList(_context.Films, "Id", "Id", directorsFilms.FilmId);
-            return View(directorsFilms);
-        }
-
-        // GET: DirectorsFilms/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
             var directorsFilms = await _context.DirectorsFilms.FindAsync(id);
+
             if (directorsFilms == null)
             {
                 return NotFound();
             }
-            ViewData["DirectorId"] = new SelectList(_context.Directors, "Id", "Id", directorsFilms.DirectorId);
-            ViewData["FilmId"] = new SelectList(_context.Films, "Id", "Id", directorsFilms.FilmId);
-            return View(directorsFilms);
+
+            return directorsFilms;
         }
 
-        // POST: DirectorsFilms/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,FilmId,DirectorId")] DirectorsFilms directorsFilms)
+        // PUT: api/PublishedCars/5
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutDirectorsFilms(int id, DirectorsFilms directorsFilms)
         {
             if (id != directorsFilms.Id)
             {
-                return NotFound();
+                return BadRequest();
             }
 
-            if (ModelState.IsValid)
+            _context.Entry(directorsFilms).State = EntityState.Modified;
+
+            try
             {
-                try
-                {
-                    _context.Update(directorsFilms);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!DirectorsFilmsExists(directorsFilms.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                await _context.SaveChangesAsync();
             }
-            ViewData["DirectorId"] = new SelectList(_context.Directors, "Id", "Id", directorsFilms.DirectorId);
-            ViewData["FilmId"] = new SelectList(_context.Films, "Id", "Id", directorsFilms.FilmId);
-            return View(directorsFilms);
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!DirectorsFilmsExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
         }
 
-        // GET: DirectorsFilms/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        // POST: api/PublishedCars
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPost]
+        public async Task<ActionResult<DirectorsFilms>> PostDirectorsFilms(DirectorsFilms directorsFilms)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            _context.DirectorsFilms.Add(directorsFilms);
+            await _context.SaveChangesAsync();
 
-            var directorsFilms = await _context.DirectorsFilms
-                .Include(d => d.Director)
-                .Include(d => d.Film)
-                .FirstOrDefaultAsync(m => m.Id == id);
+            return CreatedAtAction("GetDirectorsFilms", new { id = directorsFilms.Id }, directorsFilms);
+        }
+
+        // DELETE: api/PublishedCars/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteDirectorsFilms(int id)
+        {
+            var directorsFilms = await _context.DirectorsFilms.FindAsync(id);
             if (directorsFilms == null)
             {
                 return NotFound();
             }
 
-            return View(directorsFilms);
-        }
-
-        // POST: DirectorsFilms/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var directorsFilms = await _context.DirectorsFilms.FindAsync(id);
             _context.DirectorsFilms.Remove(directorsFilms);
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+
+            return NoContent();
         }
 
         private bool DirectorsFilmsExists(int id)
